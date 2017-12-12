@@ -1,0 +1,73 @@
+---
+- name: Create project directory
+  file:
+    path: "{{ indigo_dir }}"
+    state: directory
+
+- name: Create Tendermint root directory
+  file:
+    path: "{{ tendermint_dir }}"
+    state: directory
+
+- name: Copy Tendermint initialisation files
+  template:
+    dest: "{{ tendermint_dir }}/{{ item }}"
+    src: "{{ item }}.j2"
+  with_items:
+    - config.toml
+    - genesis.json
+
+- name: Copy Tendermint private key
+  template:
+    force: no
+    dest: "{{ tendermint_dir }}/priv_validator.json"
+    src: "priv_validator.json.j2"
+
+- name: Copy Proof Of Process validation rules
+  copy:
+    dest: "{{ tendermint_dir }}"
+    src: ../files/validation_rules.json
+
+- name: Copy agent
+  synchronize:
+    dest: "{{ indigo_dir }}"
+    src: ../../agent
+
+- name: Copy dial seed script
+  template:
+    dest: "{{ indigo_dir }}/dial.py"
+    src: dial.py.j2
+    mode: "0774"
+
+- name: Copy compose files
+  template:
+    dest: "{{ indigo_dir }}/docker-compose.yml"
+    src:  docker-compose.yml.j2
+
+- name: Copy rpi docker images
+  copy:
+    dest: "{{ ansible_env.HOME }}"
+    src: "{{ item }}"
+  with_items:
+    - rpi-filetmpop.image
+    - rpi-tmstore.image
+
+- name: Load rpi docker images
+  docker_image:
+    load_path: "{{ ansible_env.HOME }}/{{ item }}.image"
+    name: stratumn/{{ item }}
+    state: present
+  with_items:
+    - rpi-filetmpop
+    - rpi-tmstore
+
+- name: Deploy app services
+  docker_service:
+    project_name: indigo
+    project_src: "{{ indigo_dir }}/"
+    restarted: yes
+    files:
+      - docker-compose.yml
+
+- name: Run dial.sh script
+  command: "{{ indigo_dir }}/dial.py"

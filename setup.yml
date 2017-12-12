@@ -1,0 +1,16 @@
+---
+- hosts: all
+  pre_tasks:
+    - name: Enable ssh
+      service:
+        name: ssh
+        enabled: true
+        state: started
+      become: true
+    - name: Add SSH key
+      authorized_key:
+        user: "{{ ansible_ssh_user }}"
+        key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDflKKI5bsooTIXHf25qVKLu94b55UESKekbusW6N3ffregXPU0D4j0kLYjDjyVBs21jcehjqKoHDJ6V2rT8OMjQjKQJ6QyA4iQw/1MhjntJozwNAu4S2WFSJTEdHKXp/nZ15VYQI1svCPt6y6Z5IR9CWnmjLxCncAONhQk15qpJFoQlliflX+6lz/H1zPWV5fAzyyDE94qgMOWK7OjMVmsMjwiMmFVWcDpCRRPr+mwG4C5F4iOq6n9zucCSNS1yh5P0Wm9i8b8l6ntaiCLaNBKgbPhC6rf/Ql8PaaibgvidsNEvYHmhfrsGRTryo/GrlWR9Eqt9f+KpFI7eSKhPyZgKKWpjxdqRKW3KcxsocFQSF1bwnpT0zdZ20VuFh82tmtSM4TK583hq7T4Vhhfwzu0SrwqyFPl0KTPVHYu8oNbsh2ywTPStIkVsD5vTEppdKJYsXIK3dP8TVN5uZ/8ua9UlCYK8hmivOD/4GMp6Km+YPU/fFtmJd21Xj2rWglQldOOyWZg4oze8MbMs+pl3OBgEk2RY46NDB85IbkER5nhwB9Mr2HFHmDv9WRHuWHL6hblP2Xl5DiCC/M42JbCPwnzfFBg8FGLXQ3MecDzWB59pqpKmGwd+zxmLp0I/p9iCw6Z4n9wwFRhdz05ieOI+pc638EFJ4owQzjytUVEl4esWw== adrien@stratumn.com"
+
+- import_playbook: wifi.yml
+- import_playbook: indigo.yml

@@ -1,0 +1,64 @@
+---
+- name: Check if docker exists
+  shell: /usr/bin/docker version
+  register: docker_result
+  changed_when: false
+
+# - debug:
+#     msg: "{{ docker_result }}"
+
+- name: Download docker install script
+  get_url:
+    url: https://get.docker.com
+    dest: /tmp
+  when: docker_result.stderr != ""
+
+- name: Make install script executable
+  file:
+    path: /tmp/get-docker.sh
+    mode: 0755
+  when: docker_result.stderr != ""
+
+- name: Install docker
+  shell: /tmp/get-docker.sh
+  when: docker_result.stderr != ""
+
+- name: Install docker-compose
+  become: true
+  pip:
+    name: docker-compose
+    version: "1.9.0"
+
+- name: Add user to docker group
+  become: true
+  user:
+    name: "{{ ansible_ssh_user }}"
+    groups: docker
+    append: yes
+  register: docker_group
+
+# Hack that allows the ubuntu user to be actually part of the docker group
+# - name: Kill SSH
+#   shell: sleep 1; pkill -u {{ ansible_ssh_user }} sshd
+#   when: docker_group.changed
+
+# - name: Wait for connection
+#   wait_for_connection:
+#     delay: 10
+
+- name: Configure cgroup (cf https://github.com/moby/moby/issues/35587)
+  copy:
+    src: cmdline.txt
+    dest: /boot/cmdline.txt
+  become: true
+  register: cgroup
+
+- name: Restart server
+  shell: sleep 2 && /sbin/shutdown -r now "System reboot"
+  async: 1
+  poll: 0
+  when: cgroup.changed
+
+- name: Wait for connection
+  wait_for_connection:
+    delay: 10

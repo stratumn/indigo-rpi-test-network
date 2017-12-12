@@ -1,0 +1,10 @@
+---
+- name: Copy wifi configuration
+  copy:
+    src: wpa_supplicant.conf
+    dest: /etc/wpa_supplicant/wpa_supplicant.conf
+  register: wpa_supplicant
+
+- name: Reconfigure interface
+  shell: wpa_cli -i wlan0 reconfigure
+  when: wpa_supplicant.changed

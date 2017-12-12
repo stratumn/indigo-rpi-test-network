@@ -1,0 +1,5 @@
+- hosts: rpis
+  tags:
+    - indigo
+  roles:
+    - indigo
